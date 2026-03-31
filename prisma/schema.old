@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/prisma"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DIRECT_URL")
+}
+datasource db {
+  provider = "postgresql" // mysql/sqlite kullanacaksan değiştir
+  url      = env("DATABASE_URL")
+}
+
+enum Brand {
+  APPLE
+  SAMSUNG
+  OTHER // aksesuar vb. için opsiyonel
+}
+
+enum ProductKind {
+  DEVICE
+  ACCESSORY
+}
+
+enum DeviceFamily {
+  PHONE
+  WATCH
+  TABLET
+  MACBOOK
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  kind        ProductKind
+  status      ProductStatus @default(ACTIVE)
+
+  // Genel bilgiler
+  title       String
+  slug        String        @unique
+  description String?
+  brand       Brand?        // ACCESSORY için null veya OTHER bırakılabilir
+
+  // Kategorileme
+  deviceFamily DeviceFamily? // DEVICE için dolu; ACCESSORY için null olabilir
+  deviceModelId String?      // DEVICE ise bağlanır; ACCESSORY'de (opsiyonel) boş kalır
+
+  // Fiyat/stok (ödeme yok, sadece katalog amaçlı)
+  price       Decimal?       @db.Decimal(10, 2)
+  currency    String?        @default("USD")
+  sku         String?        @unique
+  stockQty    Int            @default(0)
+
+  // SEO / listeleme
+  isFeatured  Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // İlişkiler
+  deviceModel DeviceModel?   @relation(fields: [deviceModelId], references: [id], onDelete: SetNull)
+  images      ProductImage[]
+  variants    ProductVariant[]
+  tags        ProductTag[]
+  compatibilities ProductCompatibility[] // aksesuarın uyumluluğu gibi
+
+  // Cihaza özel teknik tablolar (DEVICE ürünlerinde 1-1 dolabilir)
+  phoneSpec   PhoneSpec?
+  watchSpec   WatchSpec?
+  tabletSpec  TabletSpec?
+  macSpec     MacbookSpec?
+
+  @@index([kind, status])
+  @@index([brand, deviceFamily])
+  @@index([deviceModelId])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String
+
+  // Örn: renk, depolama, beden vs.
+  name      String   // "Color"
+  value     String   // "Midnight"
+  sku       String?  @unique
+  priceDiff Decimal? @db.Decimal(10, 2)
+  stockQty  Int      @default(0)
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductTag {
+  id        String  @id @default(cuid())
+  productId String
+  tag       String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tag])
+  @@index([tag])
+}
+
+/// Cihazların seri/model kırılımı:
+/// Brand + Family + Series (ops) + Model
+model DeviceSeries {
+  id          String       @id @default(cuid())
+  brand       Brand
+  family      DeviceFamily
+  name        String       // "iPhone", "Galaxy S", "iPad", "Galaxy Tab", "Apple Watch"
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+
+  models      DeviceModel[]
+
+  @@index([brand, family])
+}
+
+model DeviceModel {
+  id          String      @id @default(cuid())
+  seriesId    String
+  name        String      // "iPhone 15 Pro", "Galaxy S24 Ultra"
+  slug        String      @unique
+  releaseYear Int?
+  createdAt   DateTime    @default(now())
+
+  series      DeviceSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  products    Product[]   // DEVICE ürünleri genelde burada 1 ürüne denk gelir ama esnek
+
+  @@index([seriesId])
+}
+
+/// Aksesuarın hangi cihaz modeli(leri) ile uyumlu olduğunu tutar.
+/// Örn: "iPhone 15 Pro Kılıf" accessory -> compat -> iPhone 15 Pro model
+model ProductCompatibility {
+  id           String @id @default(cuid())
+  productId    String
+  deviceModelId String
+
+  product     Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  deviceModel DeviceModel @relation(fields: [deviceModelId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, deviceModelId])
+  @@index([deviceModelId])
+}
+
+/// --------- DEVICE SPEC TABLES (opsiyonel ama temiz) ---------
+
+model PhoneSpec {
+  productId      String @id
+  screenInches   Float?
+  storageGb      Int?
+  ramGb          Int?
+  batteryMah     Int?
+  cameraSummary  String?
+  has5g          Boolean?
+  simType        String? // eSIM, Dual SIM...
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model WatchSpec {
+  productId     String @id
+  caseSizeMm    Int?
+  hasCellular   Boolean?
+  waterResistAtm Int?
+  material      String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model TabletSpec {
+  productId     String @id
+  screenInches  Float?
+  storageGb     Int?
+  hasCellular   Boolean?
+  pencilSupport Boolean?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model MacbookSpec {
+  productId    String @id
+  chip         String? // M3, M3 Pro...
+  ramGb        Int?
+  storageGb    Int?
+  screenInches Float?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}

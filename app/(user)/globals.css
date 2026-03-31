@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --color-basecolor: #253061;
+}
+
+body {
+  background-color: #ffffff;
+
+}
+
+/* Scrollbar'ı gizlemek için */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+
+@media (min-width: 1024px) {
+  .collection-filter {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .collection-overlay {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background-color: #222;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 9998;
+    cursor: pointer;
+    background-blend-mode: overlay;
+  }
+  .collection-overlay.show {
+    opacity: 0.3;
+    visibility: visible;
+  }
+
+  .collection-filter {
+    position: fixed !important;
+    height: 100vh;
+    top: 0;
+    left: -350px;
+    background-color: #fff;
+    z-index: 9999;
+    overflow-y: scroll;
+    width: calc(300px + 20 * (100vw - 320px) / 1600);
+    transition: all 0.5s ease;
+    box-shadow: 1px 0 5px #ddd;
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+  .collection-filter.open {
+    left: 0;
+  }
+}
+

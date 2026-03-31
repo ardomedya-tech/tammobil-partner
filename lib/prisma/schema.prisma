@@ -1,0 +1,191 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../lib/prisma"
+  binaryTargets = ["native", "debian-openssl-1.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DIRECT_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  name           String?
+  lastname       String?
+  email          String   @unique
+  password       String
+  code           String?
+  emailVerified  Boolean? @default(false)
+  tel            String?
+  identityNumber String?
+  Role           Role     @default(USER)
+  Adress         Adress[]
+
+  @@index([email])
+}
+
+model BayiUser {
+  id              Int       @id @default(autoincrement())
+  name            String?
+  lastname        String?
+  email           String    @unique
+  tel             String?
+  password        String
+  code            String?
+  emailVerified   Boolean?  @default(false)
+  firstTimeLogin  Boolean?  @default(true)
+  identityNumber  String?
+  magazaName      String?
+  sirketName      String?
+  sirketAdres     String?   @db.Text
+  vergiDairesi    String?
+  vergiNo         String?
+  iban            String?
+  ibanName        String?
+  adminOnay       Boolean?  @default(false)
+  vergiUrl        String?
+  ticaretSicilUrl String?
+  sozlesmeUrl     String?
+  imzaUrl         String?
+  kimlikUrl       String?
+  score           Float?    @default(0)
+  products        Product[]
+
+  @@index([email])
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  desc        String?   @db.Text
+  color       String?
+  storage     String?
+  condition   String?
+  price       Float?
+  inprice     Float?
+  indirimsize String?
+  indirim     Boolean?  @default(false)
+  haftaurun   Boolean?  @default(false)
+  stock       Int?      @default(0)
+  images      Json?
+  onclick     Int?      @default(0)
+  sells       Int?      @default(0)
+  aksesuar    Boolean?  @default(false)
+  kargoTime   String?
+  imei        String?
+  isActive    Boolean?  @default(true)
+  createdAt   DateTime? @default(now())
+
+  Category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int?
+  Marka      Marka?    @relation(fields: [markaId], references: [id], onDelete: Cascade)
+  markaId    Int?
+  Model      Model?    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  modelId    Int?
+  BayiUser   BayiUser? @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
+  bayiUserId Int?
+
+  @@index([slug])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String?
+  slug      String?   @unique
+  is_active Boolean?  @default(true)
+  Product   Product[]
+  Marka     Marka[]
+
+  @@index([slug])
+}
+
+model Marka {
+  id    Int     @id @default(autoincrement())
+  name  String?
+  label String?
+  slug  String?
+
+  Category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId Int?
+  Product    Product[]
+  Model      Model[]
+}
+
+model Model {
+  id       Int       @id @default(autoincrement())
+  name     String?
+  slug     String?   @unique
+  bazFiyat Float?
+  color    Json?
+  storage  Json?
+  products Product[]
+
+  Marka   Marka? @relation(fields: [markaId], references: [id], onDelete: Cascade)
+  markaId Int?
+}
+
+model Adress {
+  id             Int      @id @default(autoincrement())
+  adressName     String?
+  name           String?
+  lastname       String?
+  identityNumber String?
+  tel            String?
+  adres          String?  @db.Text
+  postalCode     String?
+  city           String?
+  district       String?
+  category       String?
+  firmaName      String?  @db.Text
+  vergiDairesi   String?  @db.Text
+  vergiNo        String?
+  efatura        Boolean?
+  User           User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         Int?
+}
+
+model PhoneSell {
+  id          Int       @id @default(autoincrement())
+  marka       String?
+  model       String?
+  storage     String?
+  yurtici     String?
+  passport    String?
+  answers     Json?
+  price       Float?
+  firstName   String?
+  lastName    String?
+  email       String?
+  phoneNumber String?
+  tcNumber    String?
+  city        String?
+  district    String?
+  address     String?
+  ibanName    String?
+  ibanSurname String?
+  ibanNumber  String?
+  status      String?   @default("beklemede")
+  createdAt   DateTime? @default(now())
+}
+
+model Contact {
+  id    Int     @id @default(autoincrement())
+  name  String?
+  email String?
+  konu  String?
+  not   String? @db.Text
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Ayarlar {
+  id       Int   @id
+  taksit   Int?
+  banner   Json?
+  settings Json?
+}
