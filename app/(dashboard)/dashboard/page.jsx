@@ -5,7 +5,7 @@ import React from "react";
 
 const page = async () => {
   const user = await getCurrentUser();
-  const products = await getProducts(user?.id);
+  const products = await getProducts(user?.id || 0);
 
   const topProducts = [...(products || [])]
     .sort((a, b) => (b?.onclick || 0) - (a?.onclick || 0))
@@ -140,7 +140,7 @@ const page = async () => {
               </tr>
             </thead>
             <tbody>
-              {topProducts.map((item) => (
+              {topProducts?.map((item) => (
                 <tr
                   key={item?.id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50"
