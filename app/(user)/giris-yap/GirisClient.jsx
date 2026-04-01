@@ -53,6 +53,7 @@ const GirisClient = () => {
     register,
     formState: { errors },
     handleSubmit,
+    reset,
   } = useForm();
 
   const onSubmit = async (data) => {
@@ -134,6 +135,7 @@ const GirisClient = () => {
 
           {activeTab === "giris" ? (
             <form
+              key="login-form"
               onSubmit={(e) => {
                 e.preventDefault();
                 onSignIn();
@@ -198,7 +200,11 @@ const GirisClient = () => {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              key="register-form"
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-4"
+            >
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label

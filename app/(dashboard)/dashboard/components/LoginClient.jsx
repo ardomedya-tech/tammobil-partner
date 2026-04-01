@@ -7,6 +7,8 @@ import { useController, useForm } from "react-hook-form";
 import { useDropzone } from "react-dropzone";
 import { FaPhoneSquareAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 const FileDropzoneField = ({ control, name, label, error }) => {
   const {
@@ -100,6 +102,13 @@ const LoginClient = ({ user }) => {
       });
     }
   };
+
+  const router = useRouter();
+  const logout = () => {
+    signOut();
+    router.replace("/giris-yap");
+    router.refresh();
+  };
   return (
     <div className="w-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -116,7 +125,7 @@ const LoginClient = ({ user }) => {
           <div className="flex items-center gap-2 text-slate-700">
             <FaPhoneSquareAlt size={22} className="text-blue-700" />
             <span className="whitespace-nowrap text-sm font-medium sm:text-base">
-              0 (555) 555 55 55
+              0 (850) 309 69 69
             </span>
           </div>
         </div>
@@ -379,12 +388,19 @@ const LoginClient = ({ user }) => {
               error={errors["sozlesme"]}
             />
 
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 flex items-center justify-between gap-3">
               <button
                 type="submit"
                 className="inline-flex w-full items-center justify-center rounded-md bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 sm:w-auto"
               >
                 Başvuruyu Tamamla
+              </button>
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="inline-flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-200 sm:w-auto"
+              >
+                Çıkış Yap
               </button>
             </div>
           </form>

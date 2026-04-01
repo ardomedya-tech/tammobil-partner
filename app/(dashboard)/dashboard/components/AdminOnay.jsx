@@ -25,7 +25,7 @@ const AdminOnay = ({ user }) => {
             <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700">
               <FaPhoneSquareAlt size={18} className="text-slate-600" />
               <span className="whitespace-nowrap text-sm font-medium">
-                0 (555) 555 55 55
+                0 (850) 309 69 69
               </span>
             </div>
           </div>

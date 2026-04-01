@@ -25,7 +25,7 @@ const page = async () => {
           </div>
           <div className="w-48 h-20 pr-4 lg:pr-8 text-gray-900 flex items-center justify-end">
             <FaPhoneSquareAlt size={24} className="text-blue-900 mr-2" />
-            <span className="text-nowrap">0 (555) 555 55 55</span>
+            <span className="text-nowrap">0 (850) 309 69 69</span>
           </div>
         </div>
         <div className="w-full h-full mt-12">
