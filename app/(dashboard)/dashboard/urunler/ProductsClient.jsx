@@ -194,7 +194,7 @@ const ProductsClient = (props) => {
             >
               <span>Tabloyu Kaydet</span>
             </button>
-            <Link href={"/dashboard/products/add"} className="cursor-pointer">
+            <Link href={"/dashboard/urunler/add"} className="cursor-pointer">
               <button
                 className="bg-emerald-500 flex items-center justify-center space-x-2 text-white active:bg-emerald-600 font-semibold text-sm px-6 py-3 rounded shadow "
                 type="button"
@@ -269,11 +269,11 @@ const ProductsClient = (props) => {
                         <Cell
                           className="hover:bg-slate-100 cursor-pointer"
                           onClick={() =>
-                            router.push(`/dashboard/products/${item?.id}`)
+                            router.push(`/dashboard/urunler/${item?.id}`)
                           }
                         >
                           <Link
-                            href={`/dashboard/products/${item.id}`}
+                            href={`/dashboard/urunler/${item.id}`}
                             className="text-nowrap md:text-wrap"
                           >
                             {item?.name}
@@ -297,7 +297,7 @@ const ProductsClient = (props) => {
                         <Cell>
                           <button
                             onClick={() => {
-                              router.push(`/dashboard/products/${item?.id}`);
+                              router.push(`/dashboard/urunler/${item?.id}`);
                             }}
                           >
                             <FaRegEdit size={26} color="green" />

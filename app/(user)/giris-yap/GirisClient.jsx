@@ -133,7 +133,13 @@ const GirisClient = () => {
           </div>
 
           {activeTab === "giris" ? (
-            <div className="w-full h-full space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSignIn();
+              }}
+              className="w-full h-full space-y-4"
+            >
               <div className="space-y-2">
                 <label
                   htmlFor="login-email"
@@ -176,8 +182,7 @@ const GirisClient = () => {
               ) : null}
 
               <button
-                type="button"
-                onClick={onSignIn}
+                type="submit"
                 disabled={isLoginLoading}
                 className="h-11 w-full rounded-xl bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -191,7 +196,7 @@ const GirisClient = () => {
               >
                 Hesabın yok mu? Kayıt ol
               </button>
-            </div>
+            </form>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">

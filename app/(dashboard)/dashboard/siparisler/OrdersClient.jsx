@@ -30,13 +30,15 @@ import "./tablecss.css";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import delProduct from "@/app/actions/Products/delProduct";
-
+import KargoBarkoduModal from "./KargoBarkoduModal";
 const OrdersClient = (props) => {
   const pdata = props.orders || [];
   const [orderData, setOrderData] = useState(pdata);
   const router = useRouter();
   const [search, setSearch] = useState("");
 
+  const [kargoBarkoduModalOpen, setKargoBarkoduModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const filteredData =
     search === ""
       ? orderData
@@ -89,14 +91,15 @@ const OrdersClient = (props) => {
 
   const totalPage = pagination?.state?.getTotalPages(data.nodes);
 
-  const productDelete = async (item) => {
+  const orderDelete = async (item) => {
     Swal.fire({
       title: item.name + " Adlı Ürün Silinecek!! ",
       showDenyButton: true,
       confirmButtonText: "Sil",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const res = await delProduct(item?.id);
+        // const res = await delProduct(item?.id);
+        const res = true;
         if (res === true) {
           await Swal.fire({
             icon: "success",
@@ -117,6 +120,11 @@ const OrdersClient = (props) => {
 
   return (
     <>
+      <KargoBarkoduModal
+        open={kargoBarkoduModalOpen}
+        onClose={() => setKargoBarkoduModalOpen(false)}
+        selectedOrder={selectedOrder}
+      />
       <div className="flex flex-col w-full pt-4">
         <div className="w-full mt-2">
           <input
@@ -139,22 +147,16 @@ const OrdersClient = (props) => {
                 <Header>
                   <HeaderRow>
                     <HeaderCellSort>
-                      <span className="text-sm text-gray-600 text-center">
-                        Siparis No
-                      </span>
+                      <span className="text-sm text-gray-600">Siparis No</span>
                     </HeaderCellSort>
                     <HeaderCellSort>
-                      <span className="text-sm text-gray-600 text-center">
-                        IMEI
-                      </span>
+                      <span className="text-sm text-gray-600">IMEI</span>
                     </HeaderCellSort>
                     <HeaderCellSort>
-                      <span className="text-sm text-gray-600 text-center">
-                        Ürün Adı
-                      </span>
+                      <span className="text-sm text-gray-600 ">Ürün Adı</span>
                     </HeaderCellSort>
                     <HeaderCellSort>
-                      <span className="text-sm text-gray-600 text-center">
+                      <span className="text-sm text-gray-600 ">
                         Satış Miktarı
                       </span>
                     </HeaderCellSort>
@@ -179,11 +181,11 @@ const OrdersClient = (props) => {
                         <Cell
                           className="hover:bg-slate-100 cursor-pointer"
                           onClick={() =>
-                            router.push(`/dashboard/orders/${item?.id}`)
+                            router.push(`/dashboard/siparisler/${item?.id}`)
                           }
                         >
                           <Link
-                            href={`/dashboard/orders/${item.id}`}
+                            href={`/dashboard/siparisler/${item.id}`}
                             className="text-nowrap md:text-wrap text-blue-500"
                           >
                             #{item?.id}
@@ -199,8 +201,14 @@ const OrdersClient = (props) => {
                         </Cell>
                         <Cell>
                           <div className="flex items-center gap-2">
-                            <button className="text-xs cursor-pointer font-semibold px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
-                              Kargo Ekle
+                            <button
+                              className="text-xs cursor-pointer font-semibold px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                              onClick={() => {
+                                setKargoBarkoduModalOpen(true);
+                                setSelectedOrder(item);
+                              }}
+                            >
+                              Kargo Barkodu
                             </button>
                             <button className="text-xs cursor-pointer font-semibold px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
                               Fatura Yükle
@@ -211,13 +219,13 @@ const OrdersClient = (props) => {
                         <Cell>
                           <button
                             onClick={() => {
-                              router.push(`/dashboard/products/${item?.id}`);
+                              router.push(`/dashboard/siparisler/${item?.id}`);
                             }}
                           >
                             <FaRegEdit size={26} color="green" />
                           </button>
 
-                          <button onClick={() => productDelete(item)}>
+                          <button onClick={() => orderDelete(item)}>
                             <FaRegTrashAlt size={26} color="red" />
                           </button>
                         </Cell>

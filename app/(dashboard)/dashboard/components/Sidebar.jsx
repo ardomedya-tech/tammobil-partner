@@ -4,10 +4,21 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { HiMiniBars3 } from "react-icons/hi2";
 import { FaHome } from "react-icons/fa";
-import { MdLogout } from "react-icons/md";
-import { MdDiscount } from "react-icons/md";
+import {
+  MdLogout,
+  MdDiscount,
+  MdOutlinePhoneIphone,
+  MdPayments,
+  MdReceiptLong,
+  MdOutlineTimer,
+  MdSell,
+  MdCampaign,
+  MdStorefront,
+  MdInsights,
+  MdAssignmentReturn,
+  MdAccountBalanceWallet,
+} from "react-icons/md";
 import { FaShopify } from "react-icons/fa";
-import { MdOutlinePhoneIphone } from "react-icons/md";
 import { signOut } from "next-auth/react";
 export default function Sidebar({ user }) {
   const [collapseShow, setCollapseShow] = useState("hidden");
@@ -15,7 +26,7 @@ export default function Sidebar({ user }) {
   const router = useRouter();
 
   const baseNavItemClass =
-    "group w-full rounded-xl px-3 py-3 text-[11px] uppercase tracking-[0.11em] font-semibold flex flex-row items-center justify-start transition-all duration-200";
+    "group w-full rounded-xl px-2 py-2 text-[11px] uppercase tracking-[0.11em] font-semibold flex flex-row items-center justify-start transition-all duration-200";
 
   const getNavItemClass = (isActive) =>
     `${baseNavItemClass} ${
@@ -59,7 +70,7 @@ export default function Sidebar({ user }) {
           {/* Collapse */}
           <div
             className={
-              "md:flex md:flex-col md:items-stretch md:opacity-100 md:relative md:mt-5 md:shadow-none shadow absolute top-0 left-0 right-0 z-40 overflow-y-auto overflow-x-hidden h-auto items-center flex-1 rounded-2xl " +
+              "md:flex md:flex-col md:items-stretch md:opacity-100 md:relative md:mt-2 md:shadow-none shadow absolute top-0 left-0 right-0 z-40 overflow-y-auto overflow-x-hidden h-auto items-center flex-1 rounded-2xl " +
               collapseShow
             }
           >
@@ -109,9 +120,9 @@ export default function Sidebar({ user }) {
               </li>
               <li className="items-center">
                 <Link
-                  href="/dashboard/products"
+                  href="/dashboard/urunler"
                   className={getNavItemClass(
-                    pathname.indexOf("/dashboard/products") !== -1,
+                    pathname.indexOf("/dashboard/urunler") !== -1,
                   )}
                   onClick={() => setCollapseShow("hidden")}
                 >
@@ -134,12 +145,12 @@ export default function Sidebar({ user }) {
             </h6>
             {/* Navigation */}
 
-            <ul className="md:flex-col md:min-w-full flex flex-col list-none md:mb-4 gap-1">
+            <ul className="md:flex-col md:min-w-full flex flex-col list-none gap-1">
               <li className="items-center">
                 <Link
-                  href="/dashboard/orders"
+                  href="/dashboard/siparisler"
                   className={getNavItemClass(
-                    pathname.indexOf("/dashboard/orders") !== -1,
+                    pathname.indexOf("/dashboard/siparisler") !== -1,
                   )}
                   onClick={() => setCollapseShow("hidden")}
                 >
@@ -154,9 +165,9 @@ export default function Sidebar({ user }) {
               </li>
               <li className="items-center">
                 <Link
-                  href="/dashboard/commission"
+                  href="/dashboard/komisyon-hesaplama"
                   className={getNavItemClass(
-                    pathname.indexOf("/dashboard/commission") !== -1,
+                    pathname.indexOf("/dashboard/komisyon-hesaplama") !== -1,
                   )}
                   onClick={() => setCollapseShow("hidden")}
                 >
@@ -173,13 +184,195 @@ export default function Sidebar({ user }) {
 
             {/* Divider */}
             <hr className="my-4 md:min-w-full border-slate-200" />
+            {/* Heading */}
+            <h6 className="md:min-w-full text-slate-400 text-[10px] uppercase tracking-[0.18em] font-bold block pt-1 pb-2 no-underline">
+              FİNANS
+            </h6>
+            {/* Navigation */}
+            <ul className="md:flex-col md:min-w-full flex flex-col list-none gap-1">
+              <li className="items-center">
+                <Link
+                  href="/dashboard/odemeler"
+                  className={getNavItemClass(
+                    pathname.indexOf("/dashboard/odemeler") !== -1,
+                  )}
+                  onClick={() => setCollapseShow("hidden")}
+                >
+                  <MdPayments
+                    size={20}
+                    className={
+                      "mr-3 transition-transform duration-200 group-hover:scale-110"
+                    }
+                  />
+                  ÖDEMELER
+                </Link>
+              </li>
+              <li className="items-center">
+                <Link
+                  href="/dashboard/faturalar"
+                  className={getNavItemClass(
+                    pathname.indexOf("/dashboard/faturalar") !== -1,
+                  )}
+                  onClick={() => setCollapseShow("hidden")}
+                >
+                  <MdReceiptLong
+                    size={20}
+                    className={
+                      "mr-3 transition-transform duration-200 group-hover:scale-110"
+                    }
+                  />
+                  FATURALAR
+                </Link>
+              </li>
+              <li className="items-center">
+                <Link
+                  href="/dashboard/erken-odeme"
+                  className={getNavItemClass(
+                    pathname.indexOf("/dashboard/erken-odeme") !== -1,
+                  )}
+                  onClick={() => setCollapseShow("hidden")}
+                >
+                  <MdOutlineTimer
+                    size={20}
+                    className={
+                      "mr-3 transition-transform duration-200 group-hover:scale-110"
+                    }
+                  />
+                  ERKEN ÖDEME
+                </Link>
+              </li>
+            </ul>
+
+            {/* Divider */}
+            <hr className="my-4 md:min-w-full border-slate-200" />
+            {/* Heading */}
+            <h6 className="md:min-w-full text-slate-400 text-[10px] uppercase tracking-[0.18em] font-bold block pt-1 pb-2 no-underline">
+              HIZLI SATIŞ
+            </h6>
+            {/* Navigation */}
+            <ul className="md:flex-col md:min-w-full flex flex-col list-none gap-1">
+              <li className="items-center">
+                <Link
+                  href="/dashboard/bize-sat"
+                  className={getNavItemClass(
+                    pathname.indexOf("/dashboard/bize-sat") !== -1,
+                  )}
+                  onClick={() => setCollapseShow("hidden")}
+                >
+                  <MdSell
+                    size={20}
+                    className={
+                      "mr-3 transition-transform duration-200 group-hover:scale-110"
+                    }
+                  />
+                  BİZE SAT
+                </Link>
+              </li>
+              <li className="items-center">
+                <Link
+                  href="/dashboard/komisyon-kampanyasi"
+                  className={getNavItemClass(
+                    pathname.indexOf("/dashboard/komisyon-kampanyasi") !== -1,
+                  )}
+                  onClick={() => setCollapseShow("hidden")}
+                >
+                  <MdCampaign
+                    size={20}
+                    className={
+                      "mr-3 transition-transform duration-200 group-hover:scale-110"
+                    }
+                  />
+                  KOMİSYON KAMPANYASI
+                </Link>
+              </li>
+              <li className="items-center">
+                <Link
+                  href="/dashboard/bayiye-sat"
+                  className={getNavItemClass(
+                    pathname.indexOf("/dashboard/bayiye-sat") !== -1,
+                  )}
+                  onClick={() => setCollapseShow("hidden")}
+                >
+                  <MdStorefront
+                    size={20}
+                    className={
+                      "mr-3 transition-transform duration-200 group-hover:scale-110"
+                    }
+                  />
+                  BAYİ'YE SAT
+                </Link>
+              </li>
+            </ul>
+
+            {/* Divider */}
+            <hr className="my-4 md:min-w-full border-slate-200" />
+            {/* Heading */}
+            <h6 className="md:min-w-full text-slate-400 text-[10px] uppercase tracking-[0.18em] font-bold block pt-1 pb-2 no-underline">
+              RAPORLAR
+            </h6>
+            {/* Navigation */}
+            <ul className="md:flex-col md:min-w-full flex flex-col list-none gap-1">
+              <li className="items-center">
+                <Link
+                  href="/dashboard/satis-raporu"
+                  className={getNavItemClass(
+                    pathname.indexOf("/dashboard/satis-raporu") !== -1,
+                  )}
+                  onClick={() => setCollapseShow("hidden")}
+                >
+                  <MdInsights
+                    size={20}
+                    className={
+                      "mr-3 transition-transform duration-200 group-hover:scale-110"
+                    }
+                  />
+                  SATIŞ RAPORU
+                </Link>
+              </li>
+              <li className="items-center">
+                <Link
+                  href="/dashboard/iade-raporu"
+                  className={getNavItemClass(
+                    pathname.indexOf("/dashboard/iade-raporu") !== -1,
+                  )}
+                  onClick={() => setCollapseShow("hidden")}
+                >
+                  <MdAssignmentReturn
+                    size={20}
+                    className={
+                      "mr-3 transition-transform duration-200 group-hover:scale-110"
+                    }
+                  />
+                  İADE RAPORU
+                </Link>
+              </li>
+              <li className="items-center">
+                <Link
+                  href="/dashboard/odeme-raporu"
+                  className={getNavItemClass(
+                    pathname.indexOf("/dashboard/odeme-raporu") !== -1,
+                  )}
+                  onClick={() => setCollapseShow("hidden")}
+                >
+                  <MdAccountBalanceWallet
+                    size={20}
+                    className={
+                      "mr-3 transition-transform duration-200 group-hover:scale-110"
+                    }
+                  />
+                  ÖDEME RAPORU
+                </Link>
+              </li>
+            </ul>
+            {/* Divider */}
+            <hr className="my-4 md:min-w-full border-slate-200" />
 
             {/* Heading */}
             <h6 className="md:min-w-full text-slate-400 text-[10px] uppercase tracking-[0.18em] font-bold block pt-1 pb-2 no-underline">
               DİĞER
             </h6>
             {/* Navigation */}
-            <ul className="md:flex-col md:min-w-full flex flex-col list-none md:mb-4 gap-1">
+            <ul className="md:flex-col md:min-w-full flex flex-col list-none gap-1">
               <li className="items-center">
                 <div
                   className={
