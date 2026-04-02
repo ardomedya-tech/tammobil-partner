@@ -17,7 +17,7 @@ const conditionDescriptions = {
 
 const shippingOptions = ["Aynı Gün", "Ertesi Gün", "3. Gün", "4. Gün"];
 
-const ProductClient = ({ allcategory, user, product }) => {
+const ProductClient = ({ allcategory, user, product, allproducts }) => {
   const { marka, model } = allcategory;
 
   const [mymodel, setMyModel] = useState({
@@ -49,6 +49,8 @@ const ProductClient = ({ allcategory, user, product }) => {
   });
 
   const selectedMarka = watch("marka");
+  const selectedColor = watch("color");
+  const selectedStorage = watch("storage");
   const selectedDurum = watch("condition");
   const selectedConditionDescription = selectedDurum
     ? conditionDescriptions[selectedDurum]
@@ -106,6 +108,30 @@ const ProductClient = ({ allcategory, user, product }) => {
 
   const getFieldClasses = (fieldName) =>
     `${fieldClassName} ${errors[fieldName] ? "border-red-300 focus:border-red-400 focus:ring-red-100" : ""}`;
+
+  const BuyBoxFiyat = allproducts
+    .filter(
+      (item) =>
+        item.markaId === parseInt(selectedMarka) &&
+        item.modelId === mymodel.value &&
+        item.color === selectedColor &&
+        item.storage === selectedStorage,
+    )
+    .sort(
+      (a, b) =>
+        (b.indirim ? b.inprice : b.price) - (a.indirim ? a.inprice : a.price),
+    );
+
+  const buyBoxProduct = BuyBoxFiyat[0] || null;
+  const buyBoxPrice = buyBoxProduct
+    ? Number(
+        buyBoxProduct.indirim ? buyBoxProduct.inprice : buyBoxProduct.price,
+      ).toLocaleString("tr-TR")
+    : null;
+  const buyBoxStoreName = buyBoxProduct?.BayiUser?.magazaName || "Tammobil";
+  const buyBoxSummary = buyBoxProduct
+    ? `BuyBox fiyatı: ${buyBoxPrice} ₺ | Satıcı mağaza: ${buyBoxStoreName}`
+    : "Bu kombinasyon için mağazada henüz ürün yok.";
 
   const onSubmit = async (data) => {
     if (!mymodel?.value) {
@@ -322,6 +348,9 @@ const ProductClient = ({ allcategory, user, product }) => {
             <h2 className="text-xl font-semibold tracking-tight text-slate-950">
               Satış
             </h2>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+              {buyBoxSummary}
+            </div>
           </div>
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -410,6 +439,7 @@ const ProductClient = ({ allcategory, user, product }) => {
                 type="number"
                 className={getFieldClasses("stock")}
                 {...register("stock", { required: true })}
+                disabled={true}
               />
               {errors.stock && (
                 <p className="mt-2 text-xs font-medium text-red-500">

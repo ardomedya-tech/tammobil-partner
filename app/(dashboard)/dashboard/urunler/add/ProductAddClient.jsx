@@ -17,10 +17,10 @@ const conditionDescriptions = {
 
 const shippingOptions = ["Aynı Gün", "Ertesi Gün", "3. Gün", "4. Gün"];
 
-const ProductAddClient = ({ allcategory, user }) => {
+const ProductAddClient = ({ allcategory, allproducts, user }) => {
   const { marka, model } = allcategory;
 
-  const [mymodel, setMyModel] = useState({});
+  const [mymodel, setMyModel] = useState(null);
 
   const {
     register,
@@ -30,6 +30,9 @@ const ProductAddClient = ({ allcategory, user }) => {
   } = useForm();
 
   const selectedMarka = watch("marka");
+  const selectedColor = watch("color");
+  const selectedStorage = watch("storage");
+
   const selectedDurum = watch("condition");
   const selectedConditionDescription = selectedDurum
     ? conditionDescriptions[selectedDurum]
@@ -88,6 +91,30 @@ const ProductAddClient = ({ allcategory, user }) => {
   const getFieldClasses = (fieldName) =>
     `${fieldClassName} ${errors[fieldName] ? "border-red-300 focus:border-red-400 focus:ring-red-100" : ""}`;
 
+  const BuyBoxFiyat = allproducts
+    .filter(
+      (item) =>
+        item.markaId === parseInt(selectedMarka) &&
+        item.modelId === mymodel?.value &&
+        item.color === selectedColor &&
+        item.storage === selectedStorage,
+    )
+    .sort(
+      (a, b) =>
+        (b.indirim ? b.inprice : b.price) - (a.indirim ? a.inprice : a.price),
+    );
+
+  const buyBoxProduct = BuyBoxFiyat[0] || null;
+  const buyBoxPrice = buyBoxProduct
+    ? Number(
+        buyBoxProduct.indirim ? buyBoxProduct.inprice : buyBoxProduct.price,
+      ).toLocaleString("tr-TR")
+    : null;
+  const buyBoxStoreName = buyBoxProduct?.BayiUser?.magazaName || "Tammobil";
+  const buyBoxSummary = buyBoxProduct
+    ? `BuyBox fiyatı: ${buyBoxPrice} ₺ | Satıcı mağaza: ${buyBoxStoreName}`
+    : "Bu kombinasyon için mağazada henüz ürün yok.";
+
   const onSubmit = async (data) => {
     if (!mymodel?.value) {
       await Swal.fire({
@@ -102,6 +129,7 @@ const ProductAddClient = ({ allcategory, user }) => {
       ...data,
       userId: user?.id,
       modelId: mymodel.value,
+      stock: 1,
     };
 
     const res = await setProduct(formData);
@@ -201,7 +229,7 @@ const ProductAddClient = ({ allcategory, user }) => {
                 name="model"
                 options={selectedMarka ? modelvalue : []}
                 onChange={(value) => {
-                  setMyModel(value || {});
+                  setMyModel(value || null);
                 }}
                 placeholder={selectedMarka ? "Model seçin" : "Önce marka seçin"}
                 noOptionsMessage={() => "Model bulunamadı"}
@@ -305,6 +333,9 @@ const ProductAddClient = ({ allcategory, user }) => {
             <h2 className="text-xl font-semibold tracking-tight text-slate-950">
               Satış
             </h2>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+              {buyBoxSummary}
+            </div>
           </div>
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -338,18 +369,18 @@ const ProductAddClient = ({ allcategory, user }) => {
                 Ürün Stok Sayısı*
               </label>
               <input
-                placeholder="Örn. 12"
+                placeholder="1"
                 name="stock"
                 id="stock"
                 type="number"
-                className={getFieldClasses("stock")}
-                {...register("stock", { required: true })}
+                className={`${fieldClassName} cursor-not-allowed bg-slate-100 text-slate-500`}
+                defaultValue={1}
+                readOnly
+                {...register("stock")}
               />
-              {errors.stock && (
-                <p className="mt-2 text-xs font-medium text-red-500">
-                  Stok bilgisi zorunludur.
-                </p>
-              )}
+              <p className="mt-2 text-xs text-slate-500">
+                Yeni eklenen ürünler varsayılan olarak 1 adet stok ile açılır.
+              </p>
             </div>
 
             <div>

@@ -17,7 +17,7 @@ export const metadata = {
     follow: false,
   },
   other: {
-    "facebook-domain-verification": "123123",
+    "facebook-domain-verification": "12423",
   },
 };
 export default async function SubLayout({ children }) {

@@ -20,39 +20,44 @@ import {
   getTheme,
 } from "@table-library/react-table-library/material-ui";
 import { FaChevronDown, FaChevronUp, FaRegEdit } from "react-icons/fa";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import KargoBarkoduModal from "./KargoBarkoduModal";
+import OdemeModal from "./OdemeModal";
 
 const formatCurrency = (value) =>
-  `${Number(value || 0).toLocaleString("tr-TR")} ₺`;
+  `${Number(value || 0).toLocaleString("tr-TR")} TL`;
 
-const OrdersClient = (props) => {
-  const pdata = props.orders || [];
-  const [orderData, setOrderData] = useState(pdata);
-  const router = useRouter();
-  const [search, setSearch] = useState("");
+const formatDate = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("tr-TR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
 
-  const [kargoBarkoduModalOpen, setKargoBarkoduModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const filteredData =
-    search === ""
-      ? orderData
-      : orderData?.filter(
-          (data) =>
-            data?.id?.toString().includes(search?.toLowerCase()) ||
-            data?.name?.toLowerCase().includes(search?.toLowerCase()),
-        );
-  const data = { nodes: filteredData };
+const statusBadge = {
+  beklemede:
+    "rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700",
+  odendi:
+    "rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-700",
+};
 
+const OdemelerClient = ({ odemeler }) => {
+  const pdata = odemeler || [];
+
+  const data = { nodes: pdata };
+
+  const [odemeModalOpen, setOdemeModalOpen] = useState(false);
+  const [selectedOdeme, setSelectedOdeme] = useState(null);
   const materialTheme = getTheme(DEFAULT_OPTIONS);
   const theme = useTheme({
     ...materialTheme,
     Table: `
-      --data-table-library_grid-template-columns: 120px 1fr 1.2fr 1fr 1.25fr 110px;
+      --data-table-library_grid-template-columns: 110px 1.1fr 1fr 1.1fr 1.2fr 0.9fr 96px;
       border-collapse: separate;
       border-spacing: 0;
-      min-width: 920px;
+      min-width: 860px;
     `,
     HeaderRow: `
       background: #f8fafc;
@@ -107,35 +112,20 @@ const OrdersClient = (props) => {
 
   return (
     <>
-      <KargoBarkoduModal
-        open={kargoBarkoduModalOpen}
-        onClose={() => setKargoBarkoduModalOpen(false)}
-        selectedOrder={selectedOrder}
+      <OdemeModal
+        isOpen={odemeModalOpen}
+        onClose={() => setOdemeModalOpen(false)}
+        selectedOdeme={selectedOdeme}
       />
       <div className="flex w-full flex-col gap-4 pt-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-950">
-                Sipariş Listesi
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Siparişleri arayabilir, barkod oluşturabilir ve detay sayfasına
-                geçebilirsiniz.
-              </p>
-            </div>
-            <div className="w-full md:max-w-sm">
-              <input
-                type="text"
-                placeholder="Sipariş no veya alıcı adına göre ara"
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200/60"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-semibold text-slate-950">Ödemeler</h2>
+            <p className="text-sm text-slate-500">
+              Mağazanıza ait ödemeleri görüntüleyebilir ve yönetebilirsiniz.
+            </p>
           </div>
         </div>
-
         <div className="w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
           <Table
             data={data}
@@ -150,33 +140,38 @@ const OrdersClient = (props) => {
                   <HeaderRow>
                     <HeaderCellSort>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Sipariş No
+                        ID
                       </span>
                     </HeaderCellSort>
                     <HeaderCellSort>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        IMEI
+                        Alınacak Tutar
                       </span>
                     </HeaderCellSort>
                     <HeaderCellSort>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Ürün Adı
+                        Kesinti
                       </span>
                     </HeaderCellSort>
                     <HeaderCellSort>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Satış Miktarı
+                        Ödenecek Tutar
                       </span>
                     </HeaderCellSort>
                     <HeaderCellSort>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Aksiyonlar
+                        Son Ödeme Tarihi
+                      </span>
+                    </HeaderCellSort>
+                    <HeaderCellSort>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Durumu
                       </span>
                     </HeaderCellSort>
 
                     <HeaderCellSort>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Düzenle/Sil
+                        Düzenle
                       </span>
                     </HeaderCellSort>
                   </HeaderRow>
@@ -184,54 +179,41 @@ const OrdersClient = (props) => {
 
                 <Body>
                   {tableList?.map((item) => {
+                    const kesinti =
+                      Number(item?.odenecekTutar || 0) -
+                      Number(item?.toplamTutar || 0);
                     return (
                       <Row key={item?.id}>
                         <Cell>
-                          <Link
-                            href={`/dashboard/siparisler/${item.id}`}
-                            className="font-semibold text-sky-700 transition hover:text-sky-800"
-                          >
+                          <span className="font-semibold text-slate-700">
                             #{item?.id}
-                          </Link>
-                        </Cell>
-                        <Cell>
-                          <span className="font-medium text-slate-700">
-                            {item?.Product?.imei || "-"}
                           </span>
                         </Cell>
+                        <Cell>{formatCurrency(item?.odenecekTutar)}</Cell>
+                        <Cell>{formatCurrency(kesinti)}</Cell>
+                        <Cell>{formatCurrency(item?.toplamTutar)}</Cell>
+                        <Cell>{formatDate(item?.tarih)}</Cell>
                         <Cell>
-                          <span className="font-medium text-slate-700">
-                            {item?.Product?.name || "-"}
+                          <span
+                            className={
+                              statusBadge[item?.status] ||
+                              "rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+                            }
+                          >
+                            {item?.status === "beklemede"
+                              ? "Bekliyor"
+                              : item?.status === "odendi"
+                                ? "Ödendi"
+                                : "Bilinmiyor"}
                           </span>
                         </Cell>
-                        <Cell>
-                          {formatCurrency(
-                            item?.Product?.indirim === true
-                              ? item?.Product?.inprice
-                              : item?.Product?.price,
-                          )}
-                        </Cell>
-                        <Cell>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
-                              onClick={() => {
-                                setKargoBarkoduModalOpen(true);
-                                setSelectedOrder(item);
-                              }}
-                            >
-                              Kargo Barkodu
-                            </button>
-                          </div>
-                        </Cell>
-
                         <Cell>
                           <button
                             type="button"
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
                             onClick={() => {
-                              router.push(`/dashboard/siparisler/${item?.id}`);
+                              setSelectedOdeme(item);
+                              setOdemeModalOpen(true);
                             }}
                           >
                             <FaRegEdit size={16} />
@@ -245,6 +227,7 @@ const OrdersClient = (props) => {
             )}
           </Table>
         </div>
+
         <div className="mb-12 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm font-semibold text-slate-700">
@@ -299,4 +282,4 @@ const OrdersClient = (props) => {
   );
 };
 
-export default OrdersClient;
+export default OdemelerClient;

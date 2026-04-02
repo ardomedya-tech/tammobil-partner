@@ -36,8 +36,14 @@ const KargoBarkoduModal = ({ open, onClose, selectedOrder }) => {
   const cargoID = selectedOrder?.kargoID || "1234567890";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6 max-h-[90vh] overflow-y-auto">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6 max-h-[90vh] overflow-y-auto"
+      >
         <div className="mb-4">
           <h2 className="text-lg font-bold text-slate-900">Kargo Barkodu</h2>
           <p className="mt-1 text-sm text-slate-500">

@@ -1,181 +1,83 @@
 "use server";
-import StatusMail from "@/app/email/StatusMail";
-import { prisma } from "@/lib/prismadb";
+import { createSupabaseClient } from "@/lib/db";
+import slugify from "slugify";
 
-export default async function putOrder(data) {
+const characterMap = {
+  Ç: "C",
+  Ş: "S",
+  Ğ: "G",
+  İ: "I",
+  Ö: "O",
+  Ü: "U",
+  ç: "c",
+  ş: "s",
+  ğ: "g",
+  ı: "i",
+  ö: "o",
+  ü: "u",
+};
+
+const toSlug = (value) =>
+  slugify(value ?? "", {
+    lower: true,
+    replacement: "-",
+    remove: /[*+~.()'"!:@]/g,
+    locale: "tr",
+    trim: true,
+    strict: true,
+  }).replace(/[ÇŞĞİÖÜçşğıöü]/g, (char) => characterMap[char] || char);
+
+export default async function putOrder(formData, status, orderId) {
   try {
-    await prisma.SiparisOrder.update({
-      where: {
-        id: data.id,
-      },
-      data: {
-        status: data.status,
-        error: data.message,
-      },
-    });
+    const supabase = createSupabaseClient();
 
-    const siparis = await prisma.siparisOrder.findUnique({
-      where: {
-        id: data.id,
-      },
-    });
+    const { data: order, error: orderError } = await supabase
+      .from("Orders")
+      .select("* , BayiUser(*)")
+      .eq("id", orderId)
+      .single();
 
-    const nodemailer = await import("nodemailer");
-
-    const { render } = await import("@react-email/render");
-
-    let transporter = nodemailer.createTransport({
-      host: "mail.farcialiusta.com",
-      port: 465,
-      secure: true, // upgrade later with STARTTLS
-      auth: {
-        user: "bilgi@farcialiusta.com",
-        pass: "farcialiusta.1",
-      },
-    });
-
-    let textstatus = null;
-    let html = null;
-    let mailOptions = null;
-    switch (data.status) {
-      case "ONAY":
-        textstatus =
-          "Siparişiniz onaylanmış olup, herhangi bir sorun tespit edilmemiştir. İşlem sırasına göre siparişiniz en kısa sürede işleme alınacaktır. Siparişinizde herhangi bir değişiklik yapılması gerekiyorsa, lütfen bu durumu en kısa sürede bildiriniz. İlginiz için teşekkür eder, iyi günler dileriz.";
-        html = await render(
-          <StatusMail siparis={siparis} status={textstatus} />,
-          {
-            pretty: true,
-          },
-        );
-        mailOptions = {
-          from: "bilgi@mayplastik.com",
-          to: siparis.email,
-          subject: "May Plastik - Siparişiniz Onaylandı ve İşleme Alınacaktır",
-          html: html,
-        };
-        break;
-
-      case "YAPILIYOR":
-        textstatus =
-          "Siparişiniz şu anda hazırlık aşamasındadır ve 3 ila 5 iş günü içerisinde tamamlanması planlanmaktadır. Siparişinizde herhangi bir değişiklik yapılması gerekiyorsa, lütfen bu durumu en kısa sürede bildiriniz.";
-        html = await render(
-          <StatusMail siparis={siparis} status={textstatus} />,
-          {
-            pretty: true,
-          },
-        );
-        mailOptions = {
-          from: "bilgi@mayplastik.com",
-          to: siparis.email,
-          subject:
-            "May Plastik - Siparişiniz Hazırlanıyor - Değişiklik Bildirimi İçin Lütfen İletişime Geçin",
-          html: html,
-        };
-        break;
-
-      case "KARGO":
-        textstatus =
-          "Siparişinizin yapımı tamamlanmıştır ve en kısa sürede adresinize teslim edilecektir. Hizmetimizden memnun kaldıysanız, Google üzerinden yorum bırakmanızı rica ederiz. İlginiz için teşekkür ederiz.";
-        html = await render(
-          <StatusMail siparis={siparis} status={textstatus} />,
-          {
-            pretty: true,
-          },
-        );
-        mailOptions = {
-          from: "bilgi@mayplastik.com",
-          to: siparis.email,
-          subject:
-            "May Plastik - Siparişiniz Hazır - Faturanız ve Teslimat Bilgileri",
-          html: html,
-          attachments: [
-            {
-              filename: "e-fatura.pdf",
-              content: Buffer.from(buffer),
-            },
-          ],
-        };
-        break;
-
-      case "FATURA":
-        const pdfUrl = siparis?.fatura;
-        const response = await axios.get(pdfUrl, {
-          responseType: "arraybuffer",
-        });
-
-        const buffer = response.data;
-
-        textstatus =
-          "Siparişinize ait fatura, aşağıda ve e-posta ekinde yer almaktadır. Herhangi bir sorunuz olması durumunda, bizimle iletişime geçmekten çekinmeyiniz. Hizmetimizi tercih ettiğiniz için teşekkür eder, iyi günler dileriz";
-        html = await render(
-          <StatusMail siparis={siparis} status={textstatus} />,
-          {
-            pretty: true,
-          },
-        );
-        mailOptions = {
-          from: "bilgi@mayplastik.com",
-          to: siparis.email,
-          subject:
-            "May Plastik - Siparişiniz Hazır - Faturanız ve Teslimat Bilgileri",
-          html: html,
-          attachments: [
-            {
-              filename: "e-fatura.pdf",
-              content: Buffer.from(buffer),
-            },
-          ],
-        };
-        break;
-
-      case "İADE":
-        textstatus = `Siparişiniz iade edilecektir. İade sebebi: ${data.message}. Anlayışınız için teşekkür ederiz.`;
-        html = await render(
-          <StatusMail siparis={siparis} status={textstatus} />,
-          {
-            pretty: true,
-          },
-        );
-        mailOptions = {
-          from: "bilgi@mayplastik.com",
-          to: siparis.email,
-          subject:
-            "May Plastik - Siparişiniz İade Edilecektir - Detaylar İçin Bilgilendirme",
-          html: html,
-        };
-        break;
-
-      case "HATA":
-        textstatus = `Siparişinizde bir sorunla karşılaşılmıştır. Bu durumu çözebilmek için lütfen bizimle iletişime geçiniz. Sorun: ${data.message}. İlginiz için teşekkür ederiz.`;
-        html = await render(
-          <StatusMail siparis={siparis} status={textstatus} />,
-          {
-            pretty: true,
-          },
-        );
-        mailOptions = {
-          from: "bilgi@mayplastik.com",
-          to: siparis.email,
-          subject:
-            "May Plastik - Siparişinizde Bir Sorun Tespit Edildi - Detaylar İçin Bizimle İletişime Geçin",
-          html: html,
-        };
-        break;
-
-      default:
-        break;
+    if (orderError) {
+      throw new Error(orderError.message || "Sipariş bulunamadı.");
     }
 
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("E-posta gönderildi: " + info.response);
-      }
-    });
+    const file = formData.get("file");
+    const updatePayload = { status };
 
-    return true;
+    if (file && file instanceof File && file.size > 0) {
+      const { data, error: uploadError } = await supabase.storage
+        .from("invoices")
+        .upload(
+          `${orderId}/${toSlug(order?.BayiUser?.magazaName)}-fatura-${Date.now()}`,
+          file,
+          {
+            cacheControl: "3600",
+            upsert: true,
+          },
+        );
+
+      if (uploadError) {
+        throw new Error(uploadError.message || "Fatura yüklenemedi.");
+      }
+
+      const { data: invoiceData } = supabase.storage
+        .from("invoices")
+        .getPublicUrl(data.path);
+
+      updatePayload.faturaUrl = invoiceData.publicUrl;
+    }
+
+    const { error: updateError } = await supabase
+      .from("Orders")
+      .update(updatePayload)
+      .eq("id", orderId);
+
+    if (updateError) {
+      throw new Error(updateError.message || "Sipariş güncellenemedi.");
+    }
+
+    return { status: true, invoiceUrl: updatePayload.faturaUrl ?? null };
   } catch (error) {
-    throw new Error(error);
+    throw new Error(error?.message || "putOrder hatasi");
   }
 }

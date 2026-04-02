@@ -56,7 +56,28 @@ const ProductsClient = (props) => {
   const theme = useTheme({
     ...materialTheme,
     Table: `
-      --data-table-library_grid-template-columns: repeat(7, 1fr);
+      --data-table-library_grid-template-columns: 1.5fr 1.2fr 110px 120px 130px 110px;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 900px;
+    `,
+    HeaderRow: `
+      background: #f8fafc;
+    `,
+    Row: `
+      border-bottom: 1px solid #e2e8f0;
+      &:last-of-type {
+        border-bottom: 0;
+      }
+      &:hover {
+        background: #f8fafc;
+      }
+    `,
+    BaseCell: `
+      padding: 14px 16px;
+      font-size: 14px;
+      color: #334155;
+      align-items: center;
     `,
   });
   const sort = useSort(
@@ -72,9 +93,6 @@ const ProductsClient = (props) => {
       },
       sortToggleType: SortToggleType.AlternateWithReset,
       sortFns: {
-        STOCK: (array) => array.sort((a, b) => b.stock - a.stock),
-        SELLS: (array) => array.sort((a, b) => b.sells - a.sells),
-        CLICK: (array) => array.sort((a, b) => b.onclick - a.onclick),
         NAME: (array) => array.sort((a, b) => a?.name?.localeCompare(b?.name)),
       },
     },
@@ -184,35 +202,45 @@ const ProductsClient = (props) => {
   };
   return (
     <>
-      <div className="flex flex-col w-full pt-4">
-        <div className="flex flex-wrap">
-          <div className="w-full flex justify-between items-center">
-            <button
-              className="bg-emerald-500 flex items-center justify-center space-x-2 text-white active:bg-emerald-600 font-semibold text-sm px-6 py-3 rounded shadow "
-              type="button"
-              onClick={productSave}
-            >
-              <span>Tabloyu Kaydet</span>
-            </button>
-            <Link href={"/dashboard/urunler/add"} className="cursor-pointer">
+      <div className="flex w-full flex-col gap-4 pt-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-950">
+                Ürün Listesi
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Ürünleri arayabilir, düzenleyebilir ve yeni ürün
+                ekleyebilirsiniz.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                type="text"
+                placeholder="Ürün no veya adına göre ara"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200/60 sm:w-64"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
               <button
-                className="bg-emerald-500 flex items-center justify-center space-x-2 text-white active:bg-emerald-600 font-semibold text-sm px-6 py-3 rounded shadow "
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
                 type="button"
+                onClick={productSave}
               >
-                <span>Ürün Ekle</span> <FaArrowRight size={12} />
+                Tabloyu Kaydet
               </button>
-            </Link>
+              <Link href={"/dashboard/urunler/add"}>
+                <button
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+                  type="button"
+                >
+                  Ürün Ekle <FaArrowRight size={12} />
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
-        <div className="w-full mt-2">
-          <input
-            type="text"
-            placeholder="Ara"
-            className="w-full h-12 bg-slate-200 px-4"
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="flex w-full overflow-x-scroll">
+        <div className="w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
           <Table
             data={data}
             sort={sort}
@@ -225,37 +253,32 @@ const ProductsClient = (props) => {
                 <Header>
                   <HeaderRow>
                     <HeaderCellSort sortKey="NAME">
-                      <span className="text-sm text-gray-600 text-center">
-                        Ad
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Ürün Adı
                       </span>
                     </HeaderCellSort>
                     <HeaderCellSort>
-                      <span className="text-sm text-gray-600 text-center">
-                        Fiyatı / İndirimli Fiyatı
-                      </span>
-                    </HeaderCellSort>
-                    <HeaderCellSort sortKey="STOCK">
-                      <span className="text-sm text-gray-600 text-center">
-                        Stock Sayısı
-                      </span>
-                    </HeaderCellSort>
-                    <HeaderCellSort sortKey="SELLS">
-                      <span className="text-sm text-gray-600 text-center">
-                        Satış Miktarı
-                      </span>
-                    </HeaderCellSort>
-                    <HeaderCellSort sortKey="CLICK">
-                      <span className="text-sm text-gray-600 text-center">
-                        Toplam Tıklanma
-                      </span>
-                    </HeaderCellSort>
-                    <HeaderCellSort sortKey="CLICK">
-                      <span className="text-sm text-gray-600 text-center">
-                        Satışa Açık mı?
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Fiyat / İndirimli
                       </span>
                     </HeaderCellSort>
                     <HeaderCellSort>
-                      <span className="text-sm text-gray-600 text-center">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Satış
+                      </span>
+                    </HeaderCellSort>
+                    <HeaderCellSort>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Tıklanma
+                      </span>
+                    </HeaderCellSort>
+                    <HeaderCellSort>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Satışa Açık
+                      </span>
+                    </HeaderCellSort>
+                    <HeaderCellSort>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Düzenle/Sil
                       </span>
                     </HeaderCellSort>
@@ -266,25 +289,34 @@ const ProductsClient = (props) => {
                   {tableList?.map((item) => {
                     return (
                       <Row key={item?.id}>
-                        <Cell
-                          className="hover:bg-slate-100 cursor-pointer"
-                          onClick={() =>
-                            router.push(`/dashboard/urunler/${item?.id}`)
-                          }
-                        >
+                        <Cell>
                           <Link
                             href={`/dashboard/urunler/${item.id}`}
-                            className="text-nowrap md:text-wrap"
+                            className="font-semibold text-sky-700 transition hover:text-sky-800"
                           >
                             {item?.name}
                           </Link>
                         </Cell>
                         <Cell>
-                          {item?.price} ₺ / {item?.inprice} ₺
+                          <span className="font-medium text-slate-700">
+                            {item?.price} ₺
+                            {item?.inprice ? (
+                              <span className="ml-1 text-slate-400">
+                                / {item?.inprice} ₺
+                              </span>
+                            ) : null}
+                          </span>
                         </Cell>
-                        <Cell>{item?.stock || 0}</Cell>
-                        <Cell>{item?.sells || 0}</Cell>
-                        <Cell>{item?.onclick || 0}</Cell>
+                        <Cell>
+                          <span className="font-medium text-slate-700">
+                            {item?.sells || 0}
+                          </span>
+                        </Cell>
+                        <Cell>
+                          <span className="font-medium text-slate-700">
+                            {item?.onclick || 0}
+                          </span>
+                        </Cell>
                         <Cell>
                           <AdminSwitch
                             value={item?.isActive}
@@ -293,19 +325,25 @@ const ProductsClient = (props) => {
                             }
                           />
                         </Cell>
-
                         <Cell>
-                          <button
-                            onClick={() => {
-                              router.push(`/dashboard/urunler/${item?.id}`);
-                            }}
-                          >
-                            <FaRegEdit size={26} color="green" />
-                          </button>
-
-                          <button onClick={() => productDelete(item)}>
-                            <FaRegTrashAlt size={26} color="red" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
+                              onClick={() => {
+                                router.push(`/dashboard/urunler/${item?.id}`);
+                              }}
+                            >
+                              <FaRegEdit size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100"
+                              onClick={() => productDelete(item)}
+                            >
+                              <FaRegTrashAlt size={16} />
+                            </button>
+                          </div>
                         </Cell>
                       </Row>
                     );
@@ -315,17 +353,18 @@ const ProductsClient = (props) => {
             )}
           </Table>
         </div>
-        <div className="mt-4">
-          <div className="flex items-center justify-between gap-4 mb-12">
-            <span className="font-bold">Toplam Sayfa: {totalPage}</span>
-            <div className="flex items-center justify-center gap-2 mr-12">
-              <span className="font-bold">
-                Sayfa : {pagination?.state?.page + 1}
+        <div className="mb-12 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm font-semibold text-slate-700">
+              Toplam sayfa: {totalPage}
+            </span>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-sm font-semibold text-slate-700">
+                Sayfa: {pagination?.state?.page + 1}
               </span>
-
               <button
                 type="button"
-                className="theme-btn-one p-1 text-xl bg-stone-200 "
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={pagination?.state?.page === 0}
                 onClick={() => pagination.fns.onSetPage(0)}
               >
@@ -333,7 +372,7 @@ const ProductsClient = (props) => {
               </button>
               <button
                 type="button"
-                className="theme-btn-one p-1 text-xl bg-stone-200 "
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={pagination?.state?.page === 0}
                 onClick={() =>
                   pagination.fns.onSetPage(pagination.state.page - 1)
@@ -343,7 +382,7 @@ const ProductsClient = (props) => {
               </button>
               <button
                 type="button"
-                className="theme-btn-one p-1 text-xl bg-stone-200 "
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={pagination?.state?.page + 1 === totalPage}
                 onClick={() =>
                   pagination.fns.onSetPage(pagination.state.page + 1)
@@ -353,7 +392,7 @@ const ProductsClient = (props) => {
               </button>
               <button
                 type="button"
-                className="theme-btn-one p-1 text-xl bg-stone-200 "
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={pagination?.state?.page + 1 === totalPage}
                 onClick={() => pagination.fns.onSetPage(totalPage - 1)}
               >
