@@ -27,33 +27,36 @@ model User {
 }
 
 model BayiUser {
-  id              Int       @id @default(autoincrement())
+  id              Int         @id @default(autoincrement())
   name            String?
   lastname        String?
-  email           String    @unique
+  email           String      @unique
   tel             String?
   password        String
   code            String?
-  emailVerified   Boolean?  @default(false)
-  firstTimeLogin  Boolean?  @default(true)
+  emailVerified   Boolean?    @default(false)
+  firstTimeLogin  Boolean?    @default(true)
   identityNumber  String?
   magazaName      String?
   sirketName      String?
-  sirketAdres     String?   @db.Text
+  sirketAdres     String?     @db.Text
   vergiDairesi    String?
   vergiNo         String?
   iban            String?
   ibanName        String?
-  adminOnay       Boolean?  @default(false)
+  adminOnay       Boolean?    @default(false)
   vergiUrl        String?
   ticaretSicilUrl String?
   sozlesmeUrl     String?
   imzaUrl         String?
   kimlikUrl       String?
-  score           Float?    @default(0)
-  createdAt       DateTime? @default(now())
-  products        Product[]
-  orders          Orders[]
+  score           Float?      @default(0)
+  createdAt       DateTime?   @default(now())
+  Product         Product[]
+  Orders          Orders[]
+  Odemeler        Odemeler[]
+  Faturalar       Faturalar[]
+  ErkenOdeme      ErkenOdeme?
 
   @@index([email])
 }
@@ -160,8 +163,9 @@ model Orders {
   city           String?
   district       String?
   price          Float?
-  status         String?   @default("beklemede")
+  status         String?   @default("yeni-siparis")
   kargoID        String?
+  faturaUrl      String?
   createdAt      DateTime? @default(now())
   BayiUser       BayiUser? @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
   bayiUserId     Int?
@@ -199,6 +203,48 @@ model Contact {
   email String?
   konu  String?
   not   String? @db.Text
+}
+
+model Odemeler {
+  id            Int       @id @default(autoincrement())
+  odenecekTutar Float?
+  komisyon      Float?
+  stopaj        Float?
+  platform      Float?
+  kargo         Float?
+  ceza          Float?
+  toplamTutar   Float?
+  tarih         DateTime?
+  status        String?   @default("beklemede")
+  aciklama      String?   @db.Text
+  createdAt     DateTime? @default(now())
+  BayiUser      BayiUser? @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
+  bayiUserId    Int?
+}
+
+model Faturalar {
+  id                Int       @id @default(autoincrement())
+  komisyonFaturaUrl String?
+  kargoFaturaUrl    String?
+  platformFaturaUrl String?
+  cezaFaturaUrl     String?
+  tarih             DateTime?
+  createdAt         DateTime? @default(now())
+  BayiUser          BayiUser? @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
+  bayiUserId        Int?
+}
+
+model ErkenOdeme {
+  id         Int       @id @default(autoincrement())
+  erkenTutar Float?
+  gunSayisi  Int?
+  oran       Float?
+  kesinti    Float?
+  status     String?   @default("basvuru")
+  tarih      DateTime?
+  createdAt  DateTime? @default(now())
+  BayiUser   BayiUser? @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
+  bayiUserId Int?      @unique
 }
 
 enum Role {
