@@ -64,7 +64,7 @@ const OrderClient = ({ order }) => {
 
       setUploadedInvoiceUrl(res.invoiceUrl);
       setInvoiceFile(null);
-      Swal.fire({
+      await Swal.fire({
         icon: "success",
         title: "Başarılı",
         text: "Başarıyla kaydedildi.",
@@ -95,7 +95,7 @@ const OrderClient = ({ order }) => {
     { value: "iptal", label: "İptal Edildi" },
   ];
 
-  const product = order.Product;
+  const product = order.Product || order.BayiProduct;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
@@ -144,8 +144,8 @@ const OrderClient = ({ order }) => {
         </h2>
         {product ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <LabelValue label="Ürün Adı" value={product.name} />
-            <LabelValue label="Durum" value={product.condition} />
+            <LabelValue label="Ürün Adı" value={product?.name} />
+            <LabelValue label="Durum" value={product?.condition} />
             <LabelValue
               label="Fiyat"
               value={
@@ -154,7 +154,7 @@ const OrderClient = ({ order }) => {
                   : "-"
               }
             />
-            <LabelValue label="IMEI" value={product.imei} />
+            <LabelValue label="IMEI" value={product?.imei} />
           </div>
         ) : (
           <p className="text-sm text-slate-500">Ürün bilgisi bulunamadı.</p>

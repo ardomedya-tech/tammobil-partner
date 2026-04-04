@@ -27,62 +27,65 @@ model User {
 }
 
 model BayiUser {
-  id              Int         @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   name            String?
   lastname        String?
-  email           String      @unique
+  email           String        @unique
   tel             String?
   password        String
   code            String?
-  emailVerified   Boolean?    @default(false)
-  firstTimeLogin  Boolean?    @default(true)
+  emailVerified   Boolean?      @default(false)
+  firstTimeLogin  Boolean?      @default(true)
   identityNumber  String?
   magazaName      String?
   sirketName      String?
-  sirketAdres     String?     @db.Text
+  sirketAdres     String?       @db.Text
   vergiDairesi    String?
   vergiNo         String?
   iban            String?
   ibanName        String?
-  adminOnay       Boolean?    @default(false)
+  adminOnay       Boolean?      @default(false)
   vergiUrl        String?
   ticaretSicilUrl String?
   sozlesmeUrl     String?
   imzaUrl         String?
   kimlikUrl       String?
-  score           Float?      @default(0)
-  createdAt       DateTime?   @default(now())
+  score           Float?        @default(0)
+  createdAt       DateTime?     @default(now())
   Product         Product[]
   Orders          Orders[]
   Odemeler        Odemeler[]
   Faturalar       Faturalar[]
   ErkenOdeme      ErkenOdeme?
+  BayiProduct     BayiProduct[]
 
   @@index([email])
 }
 
 model Product {
-  id          Int       @id @default(autoincrement())
-  name        String
-  slug        String    @unique
-  desc        String?   @db.Text
-  color       String?
-  storage     String?
-  condition   String?
-  price       Float?
-  inprice     Float?
-  indirimsize String?
-  indirim     Boolean?  @default(false)
-  haftaurun   Boolean?  @default(false)
-  stock       Int?      @default(0)
-  images      Json?
-  onclick     Int?      @default(0)
-  sells       Int?      @default(0)
-  aksesuar    Boolean?  @default(false)
-  kargoTime   String?
-  imei        String?
-  isActive    Boolean?  @default(true)
-  createdAt   DateTime? @default(now())
+  id                 Int       @id @default(autoincrement())
+  name               String
+  slug               String    @unique
+  desc               String?   @db.Text
+  color              String?
+  storage            String?
+  condition          String?
+  price              Float?
+  inprice            Float?
+  indirimsize        String?
+  indirim            Boolean?  @default(false)
+  haftaurun          Boolean?  @default(false)
+  stock              Int?      @default(0)
+  images             Json?
+  onclick            Int?      @default(0)
+  sells              Int?      @default(0)
+  aksesuar           Boolean?  @default(false)
+  bayiKomisyonStatus String?   @default("pasif")
+  bayiKomisyonOran   Float?
+  kargoTime          String?
+  imei               String?
+  isActive           Boolean?  @default(true)
+  createdAt          DateTime? @default(now())
 
   Category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId Int?
@@ -92,18 +95,19 @@ model Product {
   modelId    Int?
   BayiUser   BayiUser? @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
   bayiUserId Int?
-  orders     Orders[]
+  Orders     Orders[]
 
   @@index([slug])
 }
 
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String?
-  slug      String?   @unique
-  is_active Boolean?  @default(true)
-  Product   Product[]
-  Marka     Marka[]
+  id           Int           @id @default(autoincrement())
+  name         String?
+  slug         String?       @unique
+  is_active    Boolean?      @default(true)
+  Product      Product[]
+  Marka        Marka[]
+  bayiProducts BayiProduct[]
 
   @@index([slug])
 }
@@ -114,10 +118,11 @@ model Marka {
   label String?
   slug  String?
 
-  Category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId Int?
-  Product    Product[]
-  Model      Model[]
+  Category     Category?     @relation(fields: [categoryId], references: [id])
+  categoryId   Int?
+  Product      Product[]
+  Model        Model[]
+  bayiProducts BayiProduct[]
 }
 
 model Model {
@@ -129,8 +134,9 @@ model Model {
   storage  Json?
   products Product[]
 
-  Marka   Marka? @relation(fields: [markaId], references: [id], onDelete: Cascade)
-  markaId Int?
+  Marka        Marka?        @relation(fields: [markaId], references: [id], onDelete: Cascade)
+  markaId      Int?
+  bayiProducts BayiProduct[]
 }
 
 model Adress {
@@ -154,23 +160,25 @@ model Adress {
 }
 
 model Orders {
-  id             Int       @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   name           String?
   lastname       String?
   identityNumber String?
   tel            String?
-  adres          String?   @db.Text
+  adres          String?      @db.Text
   city           String?
   district       String?
   price          Float?
-  status         String?   @default("yeni-siparis")
+  status         String?      @default("yeni-siparis")
   kargoID        String?
   faturaUrl      String?
-  createdAt      DateTime? @default(now())
-  BayiUser       BayiUser? @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
+  createdAt      DateTime?    @default(now())
+  BayiUser       BayiUser?    @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
   bayiUserId     Int?
-  Product        Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  Product        Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId      Int?
+  BayiProduct    BayiProduct? @relation(fields: [bayiProductId], references: [id], onDelete: Cascade)
+  bayiProductId  Int?
 }
 
 model PhoneSell {
@@ -235,16 +243,51 @@ model Faturalar {
 }
 
 model ErkenOdeme {
-  id         Int       @id @default(autoincrement())
-  erkenTutar Float?
-  gunSayisi  Int?
-  oran       Float?
-  kesinti    Float?
-  status     String?   @default("basvuru")
-  tarih      DateTime?
+  id          Int       @id @default(autoincrement())
+  erkenTutar  Float?
+  gunSayisi   Int?
+  oran        Float?
+  kesinti     Float?
+  toplamOdeme Float?
+  status      String?   @default("basvuru")
+  tarih       DateTime?
+  createdAt   DateTime? @default(now())
+  BayiUser    BayiUser? @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
+  bayiUserId  Int?      @unique
+}
+
+model BayiProduct {
+  id              Int     @id @default(autoincrement())
+  name            String
+  slug            String  @unique
+  desc            String? @db.Text
+  color           String?
+  storage         String?
+  condition       String?
+  price           Float?
+  status          String? @default("beklemede")
+  sells           Int?    @default(0)
+  kargoID         String?
+  musteriName     String?
+  musteriLastname String?
+  musteriTC       String?
+  musteriTel      String?
+  musteriAdres    String? @db.Text
+  musteriCity     String?
+  musteriDistrict String?
+
   createdAt  DateTime? @default(now())
+  Category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int?
+  Marka      Marka?    @relation(fields: [markaId], references: [id], onDelete: Cascade)
+  markaId    Int?
+  Model      Model?    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  modelId    Int?
   BayiUser   BayiUser? @relation(fields: [bayiUserId], references: [id], onDelete: Cascade)
-  bayiUserId Int?      @unique
+  bayiUserId Int?
+  Orders     Orders[]
+
+  @@index([slug])
 }
 
 enum Role {

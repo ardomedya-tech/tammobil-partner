@@ -12,8 +12,6 @@ const currencyFormatter = new Intl.NumberFormat("tr-TR", {
   maximumFractionDigits: 0,
 });
 
-const quickAmounts = [250000, 500000, 750000];
-
 const formatCurrency = (value) => currencyFormatter.format(value || 0);
 const formatDate = (value) => {
   if (!value) return "Belirtilmedi";
@@ -51,10 +49,6 @@ const ErkenOdemeClient = ({ erkenOdeme }) => {
   const handleAmountChange = (event) => {
     const sanitizedValue = event.target.value.replace(/[^0-9]/g, "");
     setAmount(sanitizedValue);
-  };
-
-  const handleQuickAmountSelect = (value) => {
-    setAmount(String(value));
   };
 
   const onSubmit = () => {
@@ -200,23 +194,6 @@ const ErkenOdemeClient = ({ erkenOdeme }) => {
                 />
               </div>
             </label>
-
-            <div className="flex flex-wrap gap-2">
-              {quickAmounts.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => handleQuickAmountSelect(value)}
-                  className={`rounded-full border px-3 py-2 text-sm font-medium transition ${
-                    Number(amount) === value
-                      ? "border-sky-300 bg-sky-50 text-sky-700"
-                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-slate-100"
-                  }`}
-                >
-                  {formatCurrency(value)}
-                </button>
-              ))}
-            </div>
 
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
               Talep oluşturulduktan sonra finans ekibi tarafından incelenir.

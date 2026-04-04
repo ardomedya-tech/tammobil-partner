@@ -1,11 +1,89 @@
 import { getCurrentUser } from "@/app/actions/getCurrentUser";
 import getProducts from "@/app/actions/Products/getProducts";
+import getOdemeler from "@/app/actions/Finansal/getOdemeler";
 import Image from "next/image";
 import React from "react";
+import getOrders from "@/app/actions/Order/getOrders";
 
 const page = async () => {
   const user = await getCurrentUser();
   const products = await getProducts(user?.id || 0);
+  const odemeler = await getOdemeler(user?.id || 0);
+  const orders = await getOrders(user?.id || 0);
+
+  const today = new Date();
+
+  const dailySales =
+    orders?.filter((o) => {
+      const orderDate = new Date(o.createdAt);
+      return (
+        orderDate.getDate() === today.getDate() &&
+        orderDate.getMonth() === today.getMonth() &&
+        orderDate.getFullYear() === today.getFullYear()
+      );
+    }) || [];
+
+  const monthSales =
+    orders?.filter((o) => {
+      const orderDate = new Date(o.createdAt);
+      return (
+        orderDate.getMonth() === today.getMonth() &&
+        orderDate.getFullYear() === today.getFullYear()
+      );
+    }) || [];
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const yesterdaySales =
+    orders?.filter((o) => {
+      const d = new Date(o.createdAt);
+      return (
+        d.getDate() === yesterday.getDate() &&
+        d.getMonth() === yesterday.getMonth() &&
+        d.getFullYear() === yesterday.getFullYear()
+      );
+    }) || [];
+
+  const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+
+  const lastMonthSales =
+    orders?.filter((o) => {
+      const d = new Date(o.createdAt);
+      return (
+        d.getMonth() === lastMonth.getMonth() &&
+        d.getFullYear() === lastMonth.getFullYear()
+      );
+    }) || [];
+
+  const todayTotal = dailySales.reduce((t, o) => t + (o?.price || 0), 0);
+  const yesterdayTotal = yesterdaySales.reduce(
+    (t, o) => t + (o?.price || 0),
+    0,
+  );
+  const dailyDiff =
+    yesterdayTotal === 0
+      ? todayTotal > 0
+        ? 100
+        : 0
+      : (((todayTotal - yesterdayTotal) / yesterdayTotal) * 100).toFixed(1);
+  const dailyDiffPositive = Number(dailyDiff) >= 0;
+
+  const thisMonthTotal = monthSales.reduce((t, o) => t + (o?.price || 0), 0);
+  const lastMonthTotal = lastMonthSales.reduce(
+    (t, o) => t + (o?.price || 0),
+    0,
+  );
+  const monthlyDiff =
+    lastMonthTotal === 0
+      ? thisMonthTotal > 0
+        ? 100
+        : 0
+      : (((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100).toFixed(1);
+  const monthlyDiffPositive = Number(monthlyDiff) >= 0;
+
+  const hakedisTutar = odemeler
+    ?.filter((o) => o?.status === "beklemede")
+    .reduce((total, o) => total + (o?.toplamTutar || 0), 0);
 
   const topProducts = [...(products || [])]
     .sort((a, b) => (b?.onclick || 0) - (a?.onclick || 0))
@@ -34,13 +112,19 @@ const page = async () => {
             Günlük Satış
           </h5>
           <span className="mt-2 block text-3xl font-semibold text-slate-900">
-            12.500 TL
+            {dailySales
+              .reduce((total, o) => total + (o?.price || 0), 0)
+              .toLocaleString("tr-TR")}{" "}
+            TL
           </span>
           <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-            3 Satış
+            {dailySales.length} Satış
           </span>
-          <p className="mt-2 text-xs font-medium text-emerald-600">
-            +5.2% Dünden bugüne
+          <p
+            className={`mt-2 text-xs font-medium ${dailyDiffPositive ? "text-emerald-600" : "text-red-500"}`}
+          >
+            {dailyDiffPositive ? "+" : ""}
+            {dailyDiff}% Dünden bugüne
           </p>
         </div>
 
@@ -50,13 +134,19 @@ const page = async () => {
             Toplam Satış
           </h5>
           <span className="mt-2 block text-3xl font-semibold text-slate-900">
-            125.000 TL
+            {monthSales
+              .reduce((total, o) => total + (o?.price || 0), 0)
+              .toLocaleString("tr-TR")}{" "}
+            TL
           </span>
           <span className="mt-1 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-            150 Satış
+            {monthSales.length} Satış
           </span>
-          <p className="mt-2 text-xs font-medium text-blue-600">
-            +12.5% Geçen aya göre
+          <p
+            className={`mt-2 text-xs font-medium ${monthlyDiffPositive ? "text-blue-600" : "text-red-500"}`}
+          >
+            {monthlyDiffPositive ? "+" : ""}
+            {monthlyDiff}% Geçen aya göre
           </p>
         </div>
 
@@ -103,7 +193,7 @@ const page = async () => {
             Hakediş Tutarı
           </h5>
           <span className="mt-2 block text-3xl font-semibold text-slate-900">
-            35.000 TL
+            {hakedisTutar.toLocaleString("tr-TR")} TL
           </span>
           <p className="mt-2 text-xs text-slate-500">
             Ödeme dönemi tahmini hakediş

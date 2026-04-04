@@ -7,7 +7,7 @@ export default async function getOrderOne(id) {
 
     const { data: siparis, error } = await supabase
       .from("Orders")
-      .select("*, Product(*), BayiUser(*)")
+      .select("*, Product(*), BayiProduct(*), BayiUser(*)")
       .eq("id", id)
       .single();
 

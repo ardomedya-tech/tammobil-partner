@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   Header,
@@ -23,7 +23,8 @@ import { FaChevronDown, FaChevronUp, FaRegEdit } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import KargoBarkoduModal from "./KargoBarkoduModal";
-
+import putOrderStatus from "@/app/actions/Order/putOrderStatus";
+import Swal from "sweetalert2";
 const formatCurrency = (value) =>
   `${Number(value || 0).toLocaleString("tr-TR")} ₺`;
 
@@ -32,24 +33,55 @@ const OrdersClient = (props) => {
   const [orderData, setOrderData] = useState(pdata);
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
 
   const [kargoBarkoduModalOpen, setKargoBarkoduModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const filteredData =
-    search === ""
-      ? orderData
-      : orderData?.filter(
-          (data) =>
-            data?.id?.toString().includes(search?.toLowerCase()) ||
-            data?.name?.toLowerCase().includes(search?.toLowerCase()),
-        );
+
+  const filteredData = useMemo(() => {
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+
+    if (end) {
+      end.setHours(23, 59, 59, 999);
+    }
+
+    return orderData.filter((item) => {
+      const itemDate = new Date(item?.createdAt);
+      const isInDateRange =
+        (!start || itemDate >= start) && (!end || itemDate <= end);
+      const isStatusMatch =
+        filterStatus === "all" || item?.status === filterStatus;
+
+      const searchValue = search.trim().toLowerCase();
+      const isSearchMatch =
+        searchValue === "" ||
+        item?.id?.toString().includes(searchValue) ||
+        item?.name?.toLowerCase().includes(searchValue) ||
+        item?.Product?.name?.toLowerCase().includes(searchValue) ||
+        item?.Product?.imei?.toLowerCase().includes(searchValue);
+
+      return isInDateRange && isStatusMatch && isSearchMatch;
+    });
+  }, [orderData, startDate, endDate, filterStatus, search]);
+
+  const statusFilters = [
+    { key: "all", label: "Tüm Siparişler" },
+    { key: "yeni-siparis", label: "Yeni Sipariş" },
+    { key: "kargo", label: "Kargolanan" },
+    { key: "teslim-edildi", label: "Teslim Edilen" },
+    { key: "iade", label: "İade Edilen" },
+    { key: "iptal", label: "İptal Edilen" },
+  ];
   const data = { nodes: filteredData };
 
   const materialTheme = getTheme(DEFAULT_OPTIONS);
   const theme = useTheme({
     ...materialTheme,
     Table: `
-      --data-table-library_grid-template-columns: 120px 1fr 1.2fr 1fr 1.25fr 110px;
+      --data-table-library_grid-template-columns: 100px 1fr 120px 1fr 130px 160px 90px;
       border-collapse: separate;
       border-spacing: 0;
       min-width: 920px;
@@ -105,16 +137,46 @@ const OrdersClient = (props) => {
 
   const totalPage = pagination?.state?.getTotalPages(data.nodes);
 
+  const setKargoDurumu = async (id, durum) => {
+    try {
+      const res = await putOrderStatus(id, durum);
+
+      if (res === true) {
+        await Swal.fire({
+          icon: "success",
+          title: "Başarılı",
+          text: "Kargo durumu başarıyla güncellendi.",
+        });
+        window.location.reload();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Hata",
+          text: "Kargo durumu güncellenemedi.",
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Hata",
+        text: "Durum güncellenirken bir hata oluştu.",
+      });
+    }
+  };
   return (
     <>
       <KargoBarkoduModal
         open={kargoBarkoduModalOpen}
-        onClose={() => setKargoBarkoduModalOpen(false)}
+        onClose={() => {
+          setKargoBarkoduModalOpen(false);
+          setKargoDurumu(selectedOrder?.id, "kargo");
+        }}
         selectedOrder={selectedOrder}
       />
-      <div className="flex w-full flex-col gap-4 pt-4">
+      <div className="flex w-full flex-col gap-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4">
+            {/* Başlık */}
             <div>
               <h2 className="text-lg font-semibold text-slate-950">
                 Sipariş Listesi
@@ -124,14 +186,73 @@ const OrdersClient = (props) => {
                 geçebilirsiniz.
               </p>
             </div>
-            <div className="w-full md:max-w-sm">
-              <input
-                type="text"
-                placeholder="Sipariş no veya alıcı adına göre ara"
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200/60"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+
+            {/* Tarih & Arama Filtreleri */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                  Başlangıç
+                </label>
+                <input
+                  type="date"
+                  id="date_new"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <span className="hidden text-slate-400 sm:block">—</span>
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                  Bitiş
+                </label>
+                <input
+                  type="date"
+                  id="date_old"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+              {(startDate || endDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStartDate("");
+                    setEndDate("");
+                  }}
+                  className="text-xs font-medium text-red-500 hover:text-red-700 transition"
+                >
+                  Tarihi Temizle
+                </button>
+              )}
+              <div className="flex-1 sm:min-w-55 sm:max-w-xs">
+                <input
+                  type="text"
+                  placeholder="Sipariş no, ad veya ürün ara..."
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Durum Filtreleri */}
+            <div className="flex flex-wrap gap-2">
+              {statusFilters.map((statusItem) => (
+                <button
+                  key={statusItem.key}
+                  type="button"
+                  onClick={() => setFilterStatus(statusItem.key)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    filterStatus === statusItem.key
+                      ? "border-blue-500 bg-blue-500 text-white shadow-md shadow-blue-500/30"
+                      : "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {statusItem.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -155,17 +276,22 @@ const OrdersClient = (props) => {
                     </HeaderCellSort>
                     <HeaderCellSort>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        IMEI
-                      </span>
-                    </HeaderCellSort>
-                    <HeaderCellSort>
-                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Ürün Adı
                       </span>
                     </HeaderCellSort>
                     <HeaderCellSort>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Satış Miktarı
+                      </span>
+                    </HeaderCellSort>
+                    <HeaderCellSort>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Satın Alan
+                      </span>
+                    </HeaderCellSort>
+                    <HeaderCellSort>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Durumu
                       </span>
                     </HeaderCellSort>
                     <HeaderCellSort>
@@ -194,21 +320,51 @@ const OrdersClient = (props) => {
                             #{item?.id}
                           </Link>
                         </Cell>
+
                         <Cell>
                           <span className="font-medium text-slate-700">
-                            {item?.Product?.imei || "-"}
-                          </span>
-                        </Cell>
-                        <Cell>
-                          <span className="font-medium text-slate-700">
-                            {item?.Product?.name || "-"}
+                            {item?.Product?.name} {item?.BayiProduct?.name}
                           </span>
                         </Cell>
                         <Cell>
                           {formatCurrency(
-                            item?.Product?.indirim === true
-                              ? item?.Product?.inprice
-                              : item?.Product?.price,
+                            item?.BayiProduct
+                              ? item?.BayiProduct?.price
+                              : item?.Product?.indirim === true
+                                ? item?.Product?.inprice
+                                : item?.Product?.price,
+                          )}
+                        </Cell>
+                        <Cell>
+                          <span className="font-medium text-slate-700">
+                            {item?.name} {item?.lastname}
+                          </span>
+                        </Cell>
+                        <Cell>
+                          {item?.status === "yeni-siparis" && (
+                            <span className="text-sm rounded text-yellow-600 bg-yellow-100 p-2">
+                              Yeni Satış
+                            </span>
+                          )}
+                          {item?.status === "kargo" && (
+                            <span className="text-sm rounded text-blue-600 bg-blue-100 p-2">
+                              Kargolandı
+                            </span>
+                          )}
+                          {item?.status === "teslim-edildi" && (
+                            <span className="text-sm rounded text-orange-600 bg-orange-100 p-2">
+                              Teslim Edildi
+                            </span>
+                          )}
+                          {item?.status === "iade" && (
+                            <span className="text-sm rounded text-teal-600 bg-teal-100 p-2">
+                              İade Edildi
+                            </span>
+                          )}
+                          {item?.status === "iptal" && (
+                            <span className="text-sm rounded text-purple-600 bg-purple-100 p-2">
+                              İptal Edildi
+                            </span>
                           )}
                         </Cell>
                         <Cell>

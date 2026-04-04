@@ -253,9 +253,9 @@ export default function Sidebar({ user }) {
             <ul className="md:flex-col md:min-w-full flex flex-col list-none gap-1">
               <li className="items-center">
                 <Link
-                  href="/dashboard/bize-sat"
+                  href="/dashboard/hizli-satis"
                   className={getNavItemClass(
-                    pathname.indexOf("/dashboard/bize-sat") !== -1,
+                    pathname.indexOf("/dashboard/hizli-satis") !== -1,
                   )}
                   onClick={() => setCollapseShow("hidden")}
                 >
@@ -265,7 +265,7 @@ export default function Sidebar({ user }) {
                       "mr-3 transition-transform duration-200 group-hover:scale-110"
                     }
                   />
-                  BİZE SAT
+                  HIZLI SATIŞ
                 </Link>
               </li>
               <li className="items-center">
