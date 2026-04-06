@@ -103,6 +103,7 @@ export default async function setProduct(data) {
         slug: initialSlug,
         desc: urunDescription,
         price: parseFloat(data.price) || 0,
+        alisprice: parseFloat(data.alisprice) || 0,
         inprice: 0,
         color: data.color,
         storage: data.storage,

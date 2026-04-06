@@ -24,6 +24,7 @@ const ProductClient = ({ allcategory, user, product, allproducts }) => {
     label: product?.Model?.name,
     value: product?.Model?.id,
   });
+  const [showPriceDetail, setShowPriceDetail] = useState(false);
 
   const {
     register,
@@ -38,6 +39,7 @@ const ProductClient = ({ allcategory, user, product, allproducts }) => {
       imei: product.imei,
       kargoTime: product.kargoTime,
       price: product.price,
+      alisprice: product.alisprice,
       inprice: product.inprice,
       indirimsize: product.indirimsize,
       indirim: product.indirim ? "true" : "false",
@@ -51,6 +53,22 @@ const ProductClient = ({ allcategory, user, product, allproducts }) => {
   const selectedMarka = watch("marka");
   const selectedColor = watch("color");
   const selectedStorage = watch("storage");
+  const watchPrice = watch("price");
+  const watchAlisPrice = watch("alisprice");
+
+  // Ücret sabitleri
+  const KOMISYON_ORAN = 0.15; // %15
+  const KARGO_UCRET = 200; // 200 ₺ sabit
+  const STOPAJ_ORAN = 0.01; // %1
+  const PLATFORM_GIDERI = 15; // 15 ₺ sabit
+
+  const satisFiyati = Number(watchPrice) || 0;
+  const alisFiyati = Number(watchAlisPrice) || 0;
+  const komisyon = satisFiyati * KOMISYON_ORAN;
+  const stopaj = satisFiyati * STOPAJ_ORAN;
+  const toplamDetay = komisyon + KARGO_UCRET + stopaj + PLATFORM_GIDERI;
+  const tahminiKazanc = satisFiyati - alisFiyati - toplamDetay;
+
   const selectedDurum = watch("condition");
   const selectedConditionDescription = selectedDurum
     ? conditionDescriptions[selectedDurum]
@@ -356,10 +374,31 @@ const ProductClient = ({ allcategory, user, product, allproducts }) => {
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             <div>
               <label
+                htmlFor="alisprice"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                Ürün Alış Fiyatı*
+              </label>
+              <input
+                placeholder="Örn. 24999"
+                name="alisprice"
+                id="alisprice"
+                type="number"
+                className={getFieldClasses("alisprice")}
+                {...register("alisprice", { required: true })}
+              />
+              {errors.alisprice && (
+                <p className="mt-2 text-xs font-medium text-red-500">
+                  Alış fiyatı bilgisi zorunludur.
+                </p>
+              )}
+            </div>
+            <div>
+              <label
                 htmlFor="price"
                 className="mb-2 block text-sm font-medium text-slate-700"
               >
-                Ürün Fiyatı*
+                Ürün Satış Fiyatı*
               </label>
               <input
                 placeholder="Örn. 24999"
@@ -371,10 +410,195 @@ const ProductClient = ({ allcategory, user, product, allproducts }) => {
               />
               {errors.price && (
                 <p className="mt-2 text-xs font-medium text-red-500">
-                  Fiyat bilgisi zorunludur.
+                  Satış fiyatı bilgisi zorunludur.
                 </p>
               )}
             </div>
+            <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Fiyat Detayı
+              </p>
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-sm font-medium text-slate-700">
+                  Tahmini Kazanç:
+                  <span
+                    className={`ml-2 font-bold ${tahminiKazanc >= 0 ? "text-emerald-600" : "text-red-500"}`}
+                  >
+                    {satisFiyati > 0
+                      ? `${tahminiKazanc.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`
+                      : "—"}
+                  </span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowPriceDetail(true)}
+                  className="ml-3 inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-100"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"
+                    />
+                  </svg>
+                  Detay
+                </button>
+              </div>
+            </div>
+
+            {/* Fiyat Detay Modalı */}
+            {showPriceDetail && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm"
+                onClick={() => setShowPriceDetail(false)}
+              >
+                <div
+                  className="relative w-full max-w-sm rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.22)]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Başlık */}
+                  <div className="mb-5 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-slate-950">
+                      Fiyat Detayı
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowPriceDetail(false)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Satış / Alış */}
+                  <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Satış Fiyatı</span>
+                      <span className="font-semibold text-slate-800">
+                        {satisFiyati > 0
+                          ? `${satisFiyati.toLocaleString("tr-TR")} ₺`
+                          : "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Alış Fiyatı</span>
+                      <span className="font-semibold text-red-500">
+                        {alisFiyati > 0
+                          ? `– ${alisFiyati.toLocaleString("tr-TR")} ₺`
+                          : "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Gider Kalemleri */}
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Kesintiler
+                  </p>
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">
+                        Komisyon Oranı (%{(KOMISYON_ORAN * 100).toFixed(0)})
+                      </span>
+                      <span className="font-medium text-red-500">
+                        {satisFiyati > 0
+                          ? `– ${komisyon.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`
+                          : "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Kargo Ücreti</span>
+                      <span className="font-medium text-red-500">
+                        – {KARGO_UCRET.toLocaleString("tr-TR")} ₺
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">
+                        Stopaj (%{(STOPAJ_ORAN * 100).toFixed(0)})
+                      </span>
+                      <span className="font-medium text-red-500">
+                        {satisFiyati > 0
+                          ? `– ${stopaj.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`
+                          : "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Platform Gideri</span>
+                      <span className="font-medium text-red-500">
+                        – {PLATFORM_GIDERI.toLocaleString("tr-TR")} ₺
+                      </span>
+                    </div>
+                    <div className="border-t border-slate-200 pt-2 flex justify-between text-sm">
+                      <span className="font-semibold text-slate-700">
+                        Toplam Kesinti
+                      </span>
+                      <span className="font-semibold text-red-500">
+                        {satisFiyati > 0
+                          ? `– ${toplamDetay.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`
+                          : "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tahmini Kazanç */}
+                  <div
+                    className={`mt-4 rounded-xl border p-4 ${
+                      tahminiKazanc >= 0
+                        ? "border-emerald-200 bg-emerald-50"
+                        : "border-red-200 bg-red-50"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span
+                        className={`text-sm font-semibold ${
+                          tahminiKazanc >= 0
+                            ? "text-emerald-700"
+                            : "text-red-700"
+                        }`}
+                      >
+                        Tahmini Kazanç
+                      </span>
+                      <span
+                        className={`text-lg font-bold ${
+                          tahminiKazanc >= 0
+                            ? "text-emerald-600"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {satisFiyati > 0
+                          ? `${tahminiKazanc.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`
+                          : "—"}
+                      </span>
+                    </div>
+                    {satisFiyati > 0 && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        {satisFiyati} − {alisFiyati} − {toplamDetay.toFixed(2)}{" "}
+                        (kesintiler)
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
             <div>
               <label
                 htmlFor="inprice"

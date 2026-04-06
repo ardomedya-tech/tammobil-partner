@@ -71,6 +71,7 @@ model Product {
   storage            String?
   condition          String?
   price              Float?
+  alisprice          Float?
   inprice            Float?
   indirimsize        String?
   indirim            Boolean?  @default(false)
@@ -293,6 +294,7 @@ model BayiProduct {
 enum Role {
   USER
   ADMIN
+  MUHASEBE
 }
 
 model Ayarlar {

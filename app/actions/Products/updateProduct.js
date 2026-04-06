@@ -12,6 +12,7 @@ export default async function updateProduct(data) {
         storage: data.storage,
         condition: data.condition,
         price: parseFloat(data.price) || 0,
+        alisprice: parseFloat(data.alisprice) || 0,
         inprice: parseFloat(data.inprice) || 0,
         indirimsize: data.indirimsize,
         indirim: data.indirim === "true",
